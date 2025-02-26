@@ -1,0 +1,83 @@
+import os
+from board import *
+
+os.environ['TERM'] = 'xterm'
+USER_NUMBER = ""
+SAVE_FILE = "saved_game.txt"
+
+MY_NUMBER=""
+if os.path.exists(SAVE_FILE):
+    choice = input("Do you want to continue the previous game? (y/n): ")
+    if choice == 'y':
+        saved_data = load_game()
+        if saved_data:
+            turn, user_sign1, user_sign2 ,difficulty_level= saved_data
+            print(f"\nGame loaded successfully! Turn:{turn} difficulty:{difficulty_level}\n")
+            display_board()
+    else:
+
+        print("\nStarting a new game...\n")
+        saved_data = None
+else:
+    saved_data = None
+
+if not saved_data:
+    display_board()
+    user_choose = input("Single-user or dual-user game? (s/d): ")
+    difficulty_level = input("Choose difficulty level: easy / medium / hard: ")
+
+    if user_choose == 's':
+        user_sign1 = input("Which sign would you like to choose? (x/o): ")
+        if user_sign1 == 'x':
+            user_sign2='o'
+            print(f"My sign is {user_sign2}")
+
+        else:
+            user_sign2='x'
+
+            print(f"My sign is {user_sign2}")
+
+        turn = set_sign_starter(user_sign1, user_sign2)
+        print(f"fIRst turn:{turn}")
+
+while True:
+    display_board()
+
+    if board_is_full():
+        print("\nIt's a draw!\n")
+        if os.path.exists(SAVE_FILE):
+            os.remove(SAVE_FILE)
+        break
+    winner = check_winner()
+    if winner:
+        print(f"\nPlayer ({winner}) wins!\n")
+        if os.path.exists(SAVE_FILE):
+            os.remove(SAVE_FILE)
+        break
+
+    if turn == user_sign1:
+        USER_NUMBER = input(f"Player ({user_sign1}), choose a number (1-9) or press 0 to save and exit: ")
+
+        if USER_NUMBER == "0":
+            save_game(turn, user_sign1, user_sign2,difficulty_level)
+            print("\nGame saved! Exiting...\n")
+            exit()
+
+        update_board(USER_NUMBER, "", user_sign1, user_sign2)
+        turn = manage_turns(turn, user_sign1, user_sign2)
+        print(f"Next Turn:{turn}")
+    elif turn == user_sign2:
+        if difficulty_level == "easy":
+            MY_NUMBER = easy()
+        elif difficulty_level == "medium":
+            MY_NUMBER = medium(user_sign1, user_sign2)
+        else:
+          MY_NUMBER = hard(user_sign1, user_sign2)
+
+        print(f"System ({user_sign2}) chose: {MY_NUMBER}")
+        update_board("", MY_NUMBER, user_sign1, user_sign2)
+        turn = manage_turns(turn, user_sign1, user_sign2)
+
+
+if os.path.exists(SAVE_FILE):
+    os.remove(SAVE_FILE)
